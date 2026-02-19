@@ -15,6 +15,8 @@ N = 1000
 thrshld = 0.1
 m_edd = 0.3
 
+# Calculate and store values to file
+
 for a in a_vals
     m = KerrMetric(1.0, a)
     d = ShakuraSunyaev_custom(m; eddington_ratio=m_edd, threshold=thrshld)
@@ -33,6 +35,8 @@ for a in a_vals
     cf = count_fractions(geods_st, Gradus.isco(m))
     stashdata("ref-frac-$a-$m_edd-default"; cf...)
 end
+
+# Read from files and plot
 begin
 plot()
 str = "disc"
