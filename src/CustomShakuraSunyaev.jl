@@ -4,6 +4,7 @@ struct ShakuraSunyaev_custom{T} <: AbstractThickAccretionDisc{T}
     Ṁ_Ṁedd::T
     inv_η::T
     inner_radius::T
+    outer_radius::T
     r_isco::T
     threshold::T
 end
@@ -11,6 +12,8 @@ end
 function Gradus.cross_section(d::ShakuraSunyaev_custom, ρ)
     if ρ < d.r_isco
         return d.threshold
+    elseif ρ > d.outer_radius
+        return 0
     end
     3 * d.inv_η * d.Ṁ_Ṁedd * (1 - sqrt(d.r_isco / ρ))
 end
@@ -32,7 +35,7 @@ function ShakuraSunyaev_custom(
     else
         η
     end
-    ShakuraSunyaev_custom(T(eddington_ratio), inv(radiative_efficiency), 0.0, r_isco, threshold)
+    ShakuraSunyaev_custom(T(eddington_ratio), inv(radiative_efficiency), 0.0, 500.0, r_isco, threshold)
 end
 
 export ShakuraSunyaev_custom
