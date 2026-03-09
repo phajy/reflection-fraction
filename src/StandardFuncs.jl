@@ -22,10 +22,11 @@ function point_source_geodesics(
         velfunc,
         d,
         setup.λmax;
-        save_on = true, # Make false to go back to original
-        # ensemble = Gradus.EnsembleEndpointThreads(), # remove comment to go back to original
+        save_on = false, # Make false to go back to original
+        ensemble = Gradus.EnsembleEndpointThreads(), # remove comment to go back to original
         callback = callback,
         trajectories = length(δs),
+        # gtol=1e-4,
         solver_kwargs...,
     )
 
