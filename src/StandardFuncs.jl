@@ -32,12 +32,15 @@ function point_source_geodesics(
 
     (; angles = δs, gps = gps)
 end
+function create_heights(m, N_h, h_out)
+    return collect(logrange(Gradus.isco(m) + 1e-2, N_h, h_out))
+end
 
 function calc_geods(m, d; N, h_out, N_h, kwargs...)
     """
     Taken from Fergus' thesis code
     """
-    heights = collect(logrange(Gradus.isco(m) + 1e-2, h_out, N_h))
+    heights = create_heights(m, h_out, N_h)
     geods = map(heights) do h
         @info h
         lp = LampPostModel(; θ = 1e-5, h = h)
