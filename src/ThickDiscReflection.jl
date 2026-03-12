@@ -115,8 +115,8 @@ begin
 pl = plot(grid=true, minorgrid=true)
 colors = [:red, :blue, :green, :cyan, :purple, :orange]
 
-# Set which accretion is being plotted
-m_edd_sel = 0.3 
+# Set which accretion rate is being plotted
+m_edd_sel = 0.6 
 
 for (n, a) in enumerate(a_vals)
     
@@ -129,16 +129,17 @@ for (n, a) in enumerate(a_vals)
 
     d_thin = loaddata("ref-frac-$a-0.0-thin")
 
-    plot!(heights, d_thin["above_isco"] ./ d_thin["missed"], label="a = $a", ls=:dash, c=colors[n]) 
-    break
+    plot!(heights, d_thin["above_isco"] ./ d_thin["missed"], label="", ls=:dash, c=colors[n]) 
+    # break
 end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20, 25], [1, 2, 5, 10, 20, 25]))
 title!("Reflection Fractions")
+# savefig("data/results/custom_shakura_sunyaev/Preliminary/R_comparison_medd$m_edd_sel.pdf")
 display(pl)
 end
 
-# Plot photon fractions 
+# Plot photon fractions - this needs to be improved !!!
 plot()
 begin
 c = plot(legend=:topright)
@@ -197,9 +198,8 @@ end
 # ---------------------------------------------------------------- #
 
 begin
-    # pl = plot(grid=true, minorgrid=true)
     colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    m_edd_sel = 0.3
+    m_edd_sel = 0.6
     Ignore_below_ISCO = true
 
     max_R = zeros(size(a_vals)) # Stores max R for given spin
@@ -208,10 +208,12 @@ begin
 
 
     for (n, a) in enumerate(a_vals)    
+        
         # Define m to create heights
         m = KerrMetric(1.0, a)
         heights = create_heights(m, h_out, N_h)
-        ISCO = Gradus.isco(m)
+        
+        ISCO = Gradus.isco(m) # !! Should make ISCO grid more fine, not just the 5 values of a
         ISCO_vals[n] = ISCO
 
         # Load saved fractions then calculate R
@@ -225,9 +227,6 @@ begin
         # Only consider heights greater than ISCO
         h_above_ISCO = heights[heights .>= ISCO]
         R_above_ISCO = R[heights .> ISCO]
-        
-        # scatter!(h_above_ISCO, R_above_ISCO, shape=:rect)
-        # plot!(heights, R)
 
         # Calcualte max values
         if !Ignore_below_ISCO
@@ -241,9 +240,9 @@ begin
     
     plot()
     
-    # scatter!(a_vals, max_R_h, label="Thick disk", shape=:rect, ms=5, alpha=.7)
+    scatter!(a_vals, max_R_h, label="Thick disk", shape=:rect, ms=5, alpha=.7)
     
-    scatter!(a_vals, max_R, label="Thick disk", shape=:rect, ms=5, alpha=.7)
+    # scatter!(a_vals, max_R, label="Thick disk", shape=:rect, ms=5, alpha=.7)
 
     for (n, a) in enumerate(a_vals)    
         # Define m to create heights
@@ -276,15 +275,15 @@ begin
         end
     end
 
-    scatter!(a_vals, max_R, label="Thin Disk")
+    # scatter!(a_vals, max_R, label="Thin Disk")
     
-    # scatter!(a_vals, max_R_h, label="Thin Disk")
-    # plot!(a_vals, ISCO_vals, label="ISCO", ls=:dash, c=:black)
+    scatter!(a_vals, max_R_h, label="Thin Disk")
+    plot!(a_vals, ISCO_vals, label="ISCO", ls=:dash, c=:black)
 
     xaxis!("Spin")
     yaxis!("Height (rg)")
     title!("Height at which maximum R is achieved")
-
+    # savefig("data/results/custom_shakura_sunyaev/Preliminary/R_max_h_medd$m_edd_sel.pdf")
 end
 
 
@@ -309,7 +308,6 @@ m = KerrMetric(1.0, a)
 
 composite_model = ShakuraSunyaev(m) ∘ ThinDisc(0.0, Inf)
 
-# d = ShakuraSunyaev_custom(m; eddington_ratio=m_edd, threshold=thrshld)
 d = composite_model
 heights, geods_custom = calc_geods(m, d; N,h_out, N_h)
 frac_custom = count_fractions(geods_custom, Gradus.isco(m))
