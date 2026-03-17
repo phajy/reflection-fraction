@@ -1,0 +1,1 @@
+This is just there to ensure the stash directory is created when cloning the github
