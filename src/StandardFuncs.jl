@@ -119,12 +119,12 @@ function stashdata(f_dir, f_name; root = DATA_STASH_DIRECTORY, kwargs...)
     end
 end
 
-function loaddata(file; root = DATA_STASH_DIRECTORY, quiet = false)
-    (!quiet) && @info "Loading from $file"
+function loaddata(f_dir, f_name; root = DATA_STASH_DIRECTORY, quiet = false)
+    (!quiet) && @info "Loading from $f_name"
 
     output = Dict{String,Vector{Float64}}()
     buffer = zeros(UInt8, 8)
-    open(joinpath(root, file), "r") do io
+    open(joinpath(f_dir, f_name), "r") do io
         while !eof(io)
             buffer .= 0
 
