@@ -13,8 +13,8 @@ overwrite = false
 # Initialize grid
 
 # Spin values for which results are calculated / loaded from
-# a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
-a_vals = [0.0, 0.3]
+a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
+# a_vals = [0.0, 0.3, 0.5, 0.7]
 
 # Eddington ratios for which results are calculated / loaded from
 m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] 
