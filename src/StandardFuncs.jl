@@ -103,9 +103,9 @@ if !isdir(DATA_STASH_DIRECTORY)
 end
 
 # really quick and dirty serialisation function
-function stashdata(file; root = DATA_STASH_DIRECTORY, kwargs...)
-    @info "Stashing to $file"
-    open(joinpath(root, file), "w") do io
+function stashdata(f_dir, f_name; root = DATA_STASH_DIRECTORY, kwargs...)
+    @info "Stashing to $f_name"
+    open(joinpath(f_dir, f_name), "w") do io
         for (k, v) in kwargs
             @assert v isa Vector{<:Real}
             kstr = String(k)
