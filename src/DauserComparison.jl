@@ -2,14 +2,18 @@ using GLMakie
 using Makie
 using Overlay
 using Images
-include(joinpath(@__DIR__, "src", "StandardFuncs.jl"))
+
+const _ROOT = joinpath(@__DIR__, "..")
+const _ASSETS = joinpath(@__DIR__, "assets")
+
+include(joinpath(@__DIR__, "StandardFuncs.jl"))
 
 # -------- #
 # Settings #
 # -------- #
 
-save_dir = "$(pwd())/data/results/pub/stash" # Set where to write data to
-load_dir = "$(pwd())/data/results/pub/stash" # Set where to load data from
+save_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to write data to
+load_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to load data from
 file_pref = "run_2" # Add a prefix to the filename being saved/loaded
 overwrite = false
 
@@ -19,7 +23,7 @@ overwrite = false
 a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
 
 # Eddington ratios for which results are calculated / loaded from
-m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] 
+m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Coronal heights
 h_out = 100 # Maximum height of corona
@@ -29,13 +33,13 @@ N = 10000 # Number of photons that are traced
 file_pref_load = "run_2"
 
 # load Dauser's figure
-img = load("dauser_2014.png")
+img = load(joinpath(_ASSETS, "dauser_2014.png"))
 # calibrate the image (either by hand or load existing calibration)
 # either
 # cal = calibrate_image(img; title = "Click two x, then two y")
-# save_calibration("dauser_2014.calibration", cal)
+# save_calibration(joinpath(_ASSETS, "dauser_2014.calibration"), cal)
 # or
-cal = load_calibration("dauser_2014.calibration")
+cal = load_calibration(joinpath(_ASSETS, "dauser_2014.calibration"))
 
 # plot Dauser's figure
 fig = Makie.Figure()
