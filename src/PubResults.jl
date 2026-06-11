@@ -32,7 +32,7 @@ N = 10000 # Number of photons that are traced
 for a in a_vals
     @info "a = $a"
     m = KerrMetric(1.0, a)
-    fname = "$file_pref-frac-$a-0.0-thin"
+    fname = "$file_pref-ref-frac-$a-0.0-thin"
 
     if !isfile("$save_dir/$file_pref-frac-$a-0.0-thin") || overwrite
             d_thin = ThinDisc(0.0, Inf)

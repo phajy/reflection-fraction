@@ -7,25 +7,23 @@ include("StandardFuncs.jl")
 
 save_dir = "$(pwd())/data/results/pub/stash" # Set where to write data to
 load_dir = "$(pwd())/data/results/pub/stash" # Set where to load data from
-file_pref = "test_run" # Add a prefix to the filename being saved/loaded
+file_pref = "run_2" # Add a prefix to the filename being saved/loaded
 overwrite = false
 
 # Initialize grid
 
 # Spin values for which results are calculated / loaded from
 a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
-# a_vals = [0.0, 0.3, 0.5, 0.7]
 
 # Eddington ratios for which results are calculated / loaded from
 m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] 
-# m_edd_vals = [0.1]
 
 # Coronal heights
 h_out = 100 # Maximum height of corona
 N_h = 40 # Number of coronal heights considered
 N = 10000 # Number of photons that are traced
 
-file_pref_load = "test_run_loc"
+file_pref_load = "run_2"
 
 # Thin disk reflection fractions
 begin
@@ -50,7 +48,6 @@ end
 
 begin
 pl = plot(grid=true, minorgrid=true)
-# colors = [:red, :blue, :green, :cyan, :orange, :purple, "#67BEDB", "#67BEDB", "#67BEDB", "#67BEDB", "#67BEDB", "#67BEDB"]
 
 colors = [:blue, :black, :maroon, :green, :pink, :purple, :teal, :orange, :red, :silver]
 # Set which accretion rate is being plotted
@@ -89,7 +86,7 @@ pl = plot(grid=true, minorgrid=true)
 
 colors = [:blue, :black, :maroon, :green, :pink, :purple, :teal, :orange, :red, :silver]
 # Set which accretion rate is being plotted
-a_sel = 0.99
+a_sel = 0.9
 
 # plot!([], [], label="Thin Disk", ls=:dash, c=:black)
 # plot!([], [], label="M_edd = $m_edd_sel", ls=:solid, c=:black)
