@@ -32,8 +32,13 @@ function point_source_geodesics(
 
     (; angles = δs, gps = gps)
 end
-function create_heights(m, N_h, h_out)
-    return collect(logrange(Gradus.isco(m) + 1e-2, N_h, h_out))
+function create_heights(m, N_h, h_out, ISCO=false)
+    if ISCO
+        return collect(logrange(Gradus.isco(m) + 1e-2, N_h, h_out))
+    else
+        return collect(logrange(Gradus.inner_radius(m) + 1e-2, N_h, h_out))
+    end
+
 end
 
 function calc_geods(m, d; N, h_out, N_h, kwargs...)
@@ -119,7 +124,7 @@ function stashdata(f_dir, f_name; root = DATA_STASH_DIRECTORY, kwargs...)
     end
 end
 
-function loaddata(f_dir, f_name; root = DATA_STASH_DIRECTORY, quiet = false)
+function loaddata(f_dir, f_name; root = DATA_STASH_DIRECTORY, quiet = true)
     (!quiet) && @info "Loading from $f_name"
 
     output = Dict{String,Vector{Float64}}()
