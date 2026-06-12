@@ -154,3 +154,25 @@ function loaddata(f_dir, f_name; root = DATA_STASH_DIRECTORY, quiet = true)
     end
     output
 end
+
+function calc_max_R(data, heights, heights_fine; ISCO = -1.0)
+    R = data["above_isco"] ./ data["missed"]
+
+    # Convert all NaN values of R into 0s
+    # NaNs occur when no photons reach infinity (i.e. very low heights)
+    R[isnan.(R)] .= 0
+    interp = interpolate((heights,), R, Gridded(Linear()))
+    R_interpolated = interp.(heights_fine)
+
+    # Calcualte max values
+    if ISCO == -1
+        max_R = findmax(R_interpolated)[1]
+        max_R_h = heights_fine[findmax(R_interpolated)[2]]
+    else
+        h_above_ISCO = heights_fine[heights_fine .>= ISCO]
+        R_above_ISCO = R_interpolated[heights_fine .> ISCO]
+        max_R = findmax(R_above_ISCO)[1]
+        max_R_h = h_above_ISCO[findmax(R_above_ISCO)[2]]
+    end
+    return max_R, max_R_h
+end

@@ -2,6 +2,7 @@ using Gradus, Plots
 include("StandardFuncs.jl")
 using ColorSchemes
 using Interpolations
+
 # -------- #
 # Settings #
 # -------- #
@@ -20,22 +21,25 @@ file_pref_load = "run_2"
 a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
 
 # Eddington ratios for which results are calculated / loaded from
-m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] 
+m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+m_edd_full = copy(m_edd_vals)
+pushfirst!(m_edd_full, 0.0)
 
 # Coronal heights
 h_out = 100 # Maximum height of corona
 N_h = 40 # Number of coronal heights considered
 N = 10000 # Number of photons that are traced
 
+# ---------------------------- #
 # Max R as a function of m_edd
+# ---------------------------- #
+
 begin
     plot(xlabel="m_edd", ylabel="R", title="Maximum R as a function of m_edd", legend=:bottomright, legendfontsize=7)
     for a_sel in a_vals
         m = KerrMetric(1.0, a_sel)
         heights = create_heights(m, h_out, N_h)
-        heights_fine = create_heights(m, h_out, 500)
-        m_edd_full = copy(m_edd_vals)
-        pushfirst!(m_edd_full, 0.0)
+        heights_fine = create_heights(m, h_out, 500)        
         
         R_max = zeros(size(m_edd_full))
         for (n,medd_sel) in enumerate(m_edd_full)
@@ -45,7 +49,6 @@ begin
             # R_max[n+1] = m_R
             if medd_sel == 0.0
                 d = loaddata(load_dir, "$file_pref_load-ref-frac-$a_sel-0.0-thin")
-                print("Here")
             else
                 d = loaddata(load_dir, "$file_pref_load-ref-frac-$a_sel-$medd_sel-SS")
             end
@@ -78,8 +81,77 @@ end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20], [1, 2, 5, 10, 20]))
 title!("Reflection Fractions")
+savefig("$save_dir/R_ThinDisk.pdf")
 display(pl)
 end
+
+# -------------------------- #
+# Source height at maximum R #
+# -------------------------- #
+begin
+    colors = [:red, :blue, :green, :cyan, :purple, :orange]
+    # m_edd_sel = 0.6
+    Ignore_below_ISCO = false
+
+    max_R = zeros(size(a_vals)) # Stores max R for given spin
+    max_R_h = zeros(size(a_vals)) # Stores height at which max R is reached
+    ISCO_vals = zeros(size(a_vals))
+    EH_vals = zeros(size(a_vals))
+
+    plot()
+    for m_edd_sel in m_edd_full[:]
+        for (n, a) in enumerate(a_vals)    
+            
+            # Define m to create heights
+            m = KerrMetric(1.0, a)
+            heights = create_heights(m, h_out, N_h)
+            heights_fine = create_heights(m, h_out, 500)
+
+            # Load saved fractions then calculate R
+            if m_edd_sel == 0.0
+                d = loaddata(load_dir, "$file_pref_load-ref-frac-$a-$m_edd_sel-thin")
+            else
+                d = loaddata(load_dir, "$file_pref_load-ref-frac-$a-$m_edd_sel-SS")
+            end
+            
+            m_R, m_R_h = calc_max_R(d, heights, heights_fine)
+            
+            max_R[n] = m_R
+            max_R_h[n] = m_R_h
+        end
+        scatter!(a_vals, max_R_h, label="m_edd = $m_edd_sel", shape=:circle, ms=2.5, alpha=1)
+    end
+
+    # Plot ISCO and EH
+    n = 100
+    ISCO_vals = zeros(n)
+    EH_vals = zeros(n)
+    a_vals_ISCO = LinRange(0, 0.998, n)
+    for (n,a) in enumerate(a_vals_ISCO)
+        m_temp = KerrMetric(1.0, a)
+        ISCO = Gradus.isco(m_temp)
+        ISCO_vals[n] = ISCO
+        EH_vals[n] = Gradus.inner_radius(m_temp)
+    end
+
+    
+    # scatter!(a_vals, max_R_h, label="Thin Disk")
+    plot!(a_vals_ISCO, ISCO_vals, label="ISCO", ls=:dash, c=:grey)
+    plot!(a_vals_ISCO, EH_vals, label="EH", ls=:dash, c=:black)
+
+    xaxis!("Spin")
+    yaxis!("Source Height (r_g)", ylims=(1,12), :log10)
+    title!("Source height at Maximum R")
+    savefig("$save_dir/Rmax_height.pdf")
+end
+
+# -------------------------- #
+
+# -------------------------- #
+
+# -------------------------- #
+
+# R vs m_edd for fixed spin
 
 begin
 pl = plot(grid=true, minorgrid=true)
@@ -115,134 +187,7 @@ title!("Reflection Fractions, \$ a = $a_sel\$")
 display(pl)
 end
 
-# Maximum reflection fractions
-
-begin
-    colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    # m_edd_sel = 0.6
-    Ignore_below_ISCO = false
-
-    max_R = zeros(size(a_vals)) # Stores max R for given spin
-    max_R_h = zeros(size(a_vals)) # Stores height at which max R is reached
-    ISCO_vals = zeros(size(a_vals))
-    EH_vals = zeros(size(a_vals))
-
-    plot()
-    for m_edd_sel in m_edd_vals
-        for (n, a) in enumerate(a_vals)    
-            
-            # Define m to create heights
-            m = KerrMetric(1.0, a)
-            heights = create_heights(m, h_out, N_h)
-            heights_fine = create_heights(m, h_out, 500)
-            
-            ISCO = Gradus.isco(m) # !! Should make ISCO grid more fine, not just the 5 values of a
-            ISCO_vals[n] = ISCO
-            EH_vals[n] = Gradus.inner_radius(m) +1e-2
-
-            # Load saved fractions then calculate R
-            d_custom = loaddata(load_dir, "$file_pref_load-ref-frac-$a-$m_edd_sel-SS")
-            R = d_custom["above_isco"] ./ d_custom["missed"]
-
-            # Convert all NaN values of R into 0s
-            # NaNs occur when no photons reach infinity (i.e. very low heights)
-            R[isnan.(R)] .= 0
-            interp = interpolate((heights,), R, Gridded(Linear()))
-            R_interpolated = interp.(heights_fine)
-            # Only consider heights greater than ISCO
-            
-            h_above_ISCO = heights_fine[heights_fine .>= ISCO]
-            R_above_ISCO = R_interpolated[heights_fine .> ISCO]
-
-            # Calcualte max values
-            if !Ignore_below_ISCO
-                max_R[n] = findmax(R_interpolated)[1]
-                max_R_h[n] = heights_fine[findmax(R_interpolated)[2]]
-            else
-                max_R[n] = findmax(R_above_ISCO)[1]
-                max_R_h[n] = h_above_ISCO[findmax(R_above_ISCO)[2]]
-            end
-        end
-        scatter!(a_vals, max_R_h, label="m_edd = $m_edd_sel", shape=:rect, ms=2, alpha=.7)
-    end
-    
-    # scatter!(a_vals, max_R, label="Thick disk", shape=:rect, ms=5, alpha=.7)
-
-    for (n, a) in enumerate(a_vals)    
-        # Define m to create heights
-        m = KerrMetric(1.0, a)
-        heights = create_heights(m, h_out, N_h)
-        ISCO = Gradus.isco(m)
-
-        # Load saved fractions then calculate R
-        d_thin = loaddata(load_dir, "$file_pref_load-ref-frac-$a-0.0-thin")
-        R = d_thin["above_isco"] ./ d_thin["missed"]
-
-        # Convert all NaN values of R into 0s
-        # NaNs occur when no photons reach infinity (i.e. very low heights)
-        R[isnan.(R)] .= 0
-
-        # Only consider heights greater than ISCO
-        h_above_ISCO = heights[heights .>= ISCO]
-        R_above_ISCO = R[heights .> ISCO]
-        
-        # scatter!(h_above_ISCO, R_above_ISCO, shape=:rect)
-        # plot!(heights, R)
-
-        # Calcualte max values
-        if !Ignore_below_ISCO
-            max_R[n] = findmax(R)[1]
-            max_R_h[n] = heights[findmax(R)[2]]
-        else
-            max_R[n] = findmax(R_above_ISCO)[1]
-            max_R_h[n] = h_above_ISCO[findmax(R_above_ISCO)[2]]
-        end
-    end
-
-    # scatter!(a_vals, max_R, label="Thin Disk")
-    
-    scatter!(a_vals, max_R_h, label="Thin Disk")
-    plot!(a_vals, ISCO_vals, label="ISCO", ls=:dash, c=:black)
-    plot!(a_vals, EH_vals, label="EH", ls=:dash, c=:black)
-
-    xaxis!("Spin")
-    yaxis!("Source Height (r_g)")
-    title!("Source height at Maximum R")
-    # savefig("data/results/custom_shakura_sunyaev/Preliminary/R_max_h_medd$m_edd_sel-IgnoreISCO-$Ignore_below_ISCO.pdf")
-end
-
-yaxis!(:log10, ylims=(1, 4))
-
-# Interpolation
-using Interpolations
-
-
-function calc_max_R(data, heights, heights_fine; ISCO = -1.0)
-    R = data["above_isco"] ./ data["missed"]
-
-    # Convert all NaN values of R into 0s
-    # NaNs occur when no photons reach infinity (i.e. very low heights)
-    R[isnan.(R)] .= 0
-    interp = interpolate((heights,), R, Gridded(Linear()))
-    R_interpolated = interp.(heights_fine)
-
-    # Calcualte max values
-    if ISCO == -1
-        max_R = findmax(R_interpolated)[1]
-        max_R_h = heights_fine[findmax(R_interpolated)[2]]
-    else
-        h_above_ISCO = heights_fine[heights_fine .>= ISCO]
-        R_above_ISCO = R_interpolated[heights_fine .> ISCO]
-        max_R = findmax(R_above_ISCO)[1]
-        max_R_h = h_above_ISCO[findmax(R_above_ISCO)[2]]
-    end
-    return max_R, max_R_h
-end
-
-
-
-
-
+# Comparisons to thin disk
 
 begin
 pl = plot(grid=true, minorgrid=true)
