@@ -1,6 +1,6 @@
-using GLMakie
-using Makie
+# using Pkg; Pkg.add(url = "https://github.com/phajy/Overlay.jl")
 using Overlay
+using Makie, GLMakie
 using Images
 
 const _ROOT = joinpath(@__DIR__, "..")
