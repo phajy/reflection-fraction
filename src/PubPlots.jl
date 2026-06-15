@@ -7,7 +7,7 @@ using Interpolations
 # Settings #
 # -------- #
 default(palette = palette(:Dark2_8))
-default(palette = palette(:Set3_12))
+# default(palette = palette(:Set3_12))
 
 save_dir = "$(pwd())/data/results/pub/figures" # Set where to save figures
 load_dir = "$(pwd())/data/results/pub/stash" # Set where to load data from
@@ -146,8 +146,31 @@ begin
 end
 
 # -------------------------- #
-
+# R for different m_edd
 # -------------------------- #
+begin
+    colors = [:red, :blue, :green, :cyan, :purple, :orange]
+    linestyles = [:solid, :dash, :dot]
+    plot()
+    for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
+        plot!([], [], ls = :solid, c=colors[a], label="a = $a_sel")
+        m = KerrMetric(1.0, a_sel)
+        for (n, m_sel) in enumerate([0.1, 0.5, 1.0])
+            heights = create_heights(m, h_out, N_h)
+            fname = "$file_pref_load-ref-frac-$a_sel-$m_sel-SS"
+            d = loaddata(load_dir, fname)
+            println(m_sel, a_sel)
+            println(size(heights), size(d["above_isco"] ./ d["missed"]))
+            plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[n], c=colors[a])
+            if a == 3
+                plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
+            end
+        end
+    end
+xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
+yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20, 25, 50], [1, 2, 5, 10, 20, 25, 50]))
+# title!("Reflection Fractions, \$ a = $a_sel\$")
+end
 
 # -------------------------- #
 
