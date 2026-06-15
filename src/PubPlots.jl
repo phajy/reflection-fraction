@@ -18,7 +18,8 @@ file_pref_load = "run_2"
 # Initialize grid
 
 # Spin values for which results are calculated / loaded from
-a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
+# a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
+a_vals = [0.0, 0.15, 0.3, 0.5, 0.7, 0.8, 0.900, 0.95, 0.990, 0.998]
 
 # Eddington ratios for which results are calculated / loaded from
 m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
@@ -81,7 +82,7 @@ end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20], [1, 2, 5, 10, 20]))
 title!("Reflection Fractions")
-savefig("$save_dir/R_ThinDisk.pdf")
+# savefig("$save_dir/R_ThinDisk.pdf")
 display(pl)
 end
 
@@ -142,7 +143,7 @@ begin
     xaxis!("Spin")
     yaxis!("Source Height (r_g)", ylims=(1,12), :log10)
     title!("Source height at Maximum R")
-    savefig("$save_dir/Rmax_height.pdf")
+    # savefig("$save_dir/Rmax_height.pdf")
 end
 
 # -------------------------- #
@@ -153,24 +154,29 @@ begin
     linestyles = [:solid, :dash, :dot]
     plot()
     for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
-        plot!([], [], ls = :solid, c=colors[a], label="a = $a_sel")
         m = KerrMetric(1.0, a_sel)
-        for (n, m_sel) in enumerate([0.1, 0.5, 1.0])
+        for (n, m_sel) in enumerate([0.1, 0.3, 0.5, 0.8, 1.0])
             heights = create_heights(m, h_out, N_h)
             fname = "$file_pref_load-ref-frac-$a_sel-$m_sel-SS"
             d = loaddata(load_dir, fname)
             println(m_sel, a_sel)
             println(size(heights), size(d["above_isco"] ./ d["missed"]))
-            plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[n], c=colors[a])
-            if a == 3
-                plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
+            plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[a], c=colors[n])
+            if a == 1
+                plot!([], [], ls=:solid, c=colors[n], label="\$\\dot{m}\$ = $m_sel")
             end
         end
+        plot!([], [], ls=linestyles[a], c=:black, label="a = $a_sel")
     end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
-yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20, 25, 50], [1, 2, 5, 10, 20, 25, 50]))
-# title!("Reflection Fractions, \$ a = $a_sel\$")
+yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
+title!("Reflection Fractions for varying \$\\dot{m}\$")
+# savefig("$save_dir/R-vs-h_SS.pdf")
 end
+
+# -------------------------- #
+
+# -------------------------- #
 
 # -------------------------- #
 
