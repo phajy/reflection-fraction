@@ -23,7 +23,7 @@ a_vals = [0.0, 0.15, 0.3, 0.5, 0.7, 0.8, 0.900, 0.95, 0.990, 0.998]
 
 # Eddington ratios for which results are calculated / loaded from
 m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-m_edd_full = copy(m_edd_vals)
+m_edd_full = copy(m_edd_vals) # Add thin disk case
 pushfirst!(m_edd_full, 0.0)
 
 # Coronal heights
@@ -31,6 +31,28 @@ h_out = 100 # Maximum height of corona
 N_h = 40 # Number of coronal heights considered
 N = 10000 # Number of photons that are traced
 
+# Check that all required files exist #
+begin
+    check = true
+    for a in a_vals
+        for medd in m_edd_full
+            if medd == 0.0
+                fname = "$file_pref_load-ref-frac-$a-0.0-thin"
+            else
+                fname = "$file_pref_load-ref-frac-$a-$medd-SS"
+            end
+            if ! isfile("$load_dir/$fname")
+                check = false
+                println("File $fname not present in provided directory")
+            end 
+        end
+    end
+    if check
+        println("All required files present")
+    else
+        prinln("One or more required files were not detected, ensure presence before proceeding")
+    end
+end
 # ---------------------------- #
 # Max R as a function of m_edd
 # ---------------------------- #
@@ -151,22 +173,22 @@ end
 # -------------------------- #
 begin
     colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    linestyles = [:solid, :dash, :dot]
+    linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
     plot()
     for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
         m = KerrMetric(1.0, a_sel)
-        for (n, m_sel) in enumerate([0.1, 0.3, 0.5, 0.8, 1.0])
+        for (n, m_sel) in enumerate([0.1, 0.3, 0.5,  0.6,  1.0])
             heights = create_heights(m, h_out, N_h)
             fname = "$file_pref_load-ref-frac-$a_sel-$m_sel-SS"
             d = loaddata(load_dir, fname)
             println(m_sel, a_sel)
             println(size(heights), size(d["above_isco"] ./ d["missed"]))
-            plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[a], c=colors[n])
+            plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[n], c=colors[a])
             if a == 1
-                plot!([], [], ls=:solid, c=colors[n], label="\$\\dot{m}\$ = $m_sel")
+                plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
             end
         end
-        plot!([], [], ls=linestyles[a], c=:black, label="a = $a_sel")
+        plot!([], [], ls=:solid, c=colors[a], label="a = $a_sel")
     end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
@@ -174,9 +196,33 @@ title!("Reflection Fractions for varying \$\\dot{m}\$")
 # savefig("$save_dir/R-vs-h_SS.pdf")
 end
 
-# -------------------------- #
+# --------------------------- #
+# Include Within ISCO photons #
+# --------------------------- #
 
-# -------------------------- #
+begin
+    colors = [:red, :blue, :green, :cyan, :purple, :orange]
+    linestyles = [:solid, :dash, :dot]
+    plot()
+    for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
+        m = KerrMetric(1.0, a_sel)
+        for (n, m_sel) in enumerate([0.1, 0.5, 1.0])
+            heights = create_heights(m, h_out, N_h)
+            fname = "$file_pref_load-ref-frac-$a_sel-$m_sel-SS"
+            d = loaddata(load_dir, fname)
+            plot!(heights, (d["above_isco"] .+ d["below_isco"]) ./ d["missed"], ls=linestyles[n], c=colors[a],label="", markershape=:circle, ms=1)
+            # plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=:dot, c=colors[n],)
+            if a == 1
+                plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
+            end
+        end
+        plot!([], [], ls=:solid, c=colors[a], label="a = $a_sel")
+    end
+xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
+yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
+title!("Reflection Fractions including ISCO photons")
+savefig("$save_dir/R-vs-h-SS-WithISCO.pdf")
+end
 
 # -------------------------- #
 
