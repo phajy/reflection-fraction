@@ -28,7 +28,7 @@ m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Coronal heights
 h_out = 100 # Maximum height of corona
-N_h = 100 # Number of coronal heights considered
+N_h = 40 # Number of coronal heights considered
 N = 10000 # Number of photons that are traced
 
 # ---------------------- #
@@ -68,7 +68,7 @@ for a in a_vals
         @info "α = $alpha"
         fname = "$file_pref-ref-frac-$a-$alpha-funnel"
         
-        if !isfile("$save_dir/$fname") || overwrite
+        if 1 == 1
             d = funnel_disk(alpha, m;) ∘ ThinDisc(0.0, Inf)
             heights, geods = calc_geods(m, d; N, h_out, N_h)
             cf = count_fractions(geods, Gradus.isco(m))

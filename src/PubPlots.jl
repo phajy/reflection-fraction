@@ -6,20 +6,22 @@ using Interpolations
 # -------- #
 # Settings #
 # -------- #
-default(palette = palette(:Dark2_8))
-# default(palette = palette(:Set3_12))
 
+default(palette = palette(:Dark2_8))
+
+# todo change below to more robust directory trackers
 save_dir = "$(pwd())/data/results/pub/figures" # Set where to save figures
 load_dir = "$(pwd())/data/results/pub/stash" # Set where to load data from
 # file_pref = "run_2" # Add a prefix to the filename being saved/loaded
 file_pref_load = "run_2"
 # overwrite = false
 
-# Initialize grid
+# Initialize grid #
 
 # Spin values for which results are calculated / loaded from
 # a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
 a_vals = [0.0, 0.15, 0.3, 0.5, 0.7, 0.8, 0.900, 0.95, 0.990, 0.998]
+a_vals = [0.0, 0.1, 0.15, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.900, 0.95, 0.990, 0.998]
 
 # Eddington ratios for which results are calculated / loaded from
 m_edd_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
@@ -31,7 +33,17 @@ h_out = 100 # Maximum height of corona
 N_h = 40 # Number of coronal heights considered
 N = 10000 # Number of photons that are traced
 
+α_vals = [0.1, 0.2, 0.3, 0.4]
+
+# Coronal heights
+# h_out = 100 # Maximum height of corona
+# N_h = 100 # Number of coronal heights considered
+# N = 10000 # Number of photons that are traced
+
+# ----------------------------------- #
 # Check that all required files exist #
+# ----------------------------------- #
+
 begin
     check = true
     for a in a_vals
@@ -53,6 +65,7 @@ begin
         prinln("One or more required files were not detected, ensure presence before proceeding")
     end
 end
+
 # ---------------------------- #
 # Max R as a function of m_edd
 # ---------------------------- #
@@ -67,9 +80,6 @@ begin
         R_max = zeros(size(m_edd_full))
         for (n,medd_sel) in enumerate(m_edd_full)
             # Load saved fractions then calculate R
-            
-            # m_R, m_R_h = calc_max_R(d, heights, heights_fine; ISCO=Gradus.isco(m))
-            # R_max[n+1] = m_R
             if medd_sel == 0.0
                 d = loaddata(load_dir, "$file_pref_load-ref-frac-$a_sel-0.0-thin")
             else
@@ -90,7 +100,6 @@ end
 
 begin
 pl = plot(grid=true, minorgrid=true)
-# colors = [:red, :blue, :green, :cyan, :purple, :orange]
 for (n, a) in enumerate(a_vals)
     
     m = KerrMetric(1.0, a)
@@ -111,9 +120,9 @@ end
 # -------------------------- #
 # Source height at maximum R #
 # -------------------------- #
+
 begin
     colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    # m_edd_sel = 0.6
     Ignore_below_ISCO = false
 
     max_R = zeros(size(a_vals)) # Stores max R for given spin
@@ -122,7 +131,7 @@ begin
     EH_vals = zeros(size(a_vals))
 
     plot()
-    for m_edd_sel in m_edd_full[:]
+    for m_edd_sel in m_edd_full[1:1]
         for (n, a) in enumerate(a_vals)    
             
             # Define m to create heights
@@ -168,21 +177,37 @@ begin
     # savefig("$save_dir/Rmax_height.pdf")
 end
 
+
+function hmax(a)
+    # dauser+2014 fit for max height
+    (1.89 * a^2 - 10.86*a + 10.07) * (1 + (9.41e-4 / log10(a)))
+end
+
+m = KerrMetric(1.0, 0.5)
+heights = create_heights(m, h_out, N_h)
+heights
+ones(size(heights)) .* .5
+scatter!(ones(size(heights)) .* .5, heights, ms=2, c = :black, markershape=:circle)
+
+# Overplot fit from dauser+2014
+
+a_vals_fine = LinRange(0,1, 100)
+hmax_pred = hmax.(a_vals_fine)
+plot!(a_vals_fine, hmax_pred)
 # -------------------------- #
 # R for different m_edd
 # -------------------------- #
+
 begin
     colors = [:red, :blue, :green, :cyan, :purple, :orange]
     linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
     plot()
     for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
         m = KerrMetric(1.0, a_sel)
-        for (n, m_sel) in enumerate([0.1, 0.3, 0.5,  0.6,  1.0])
+        for (n, m_sel) in enumerate([0.1, 0.4, 0.7, 1.0])
             heights = create_heights(m, h_out, N_h)
             fname = "$file_pref_load-ref-frac-$a_sel-$m_sel-SS"
             d = loaddata(load_dir, fname)
-            println(m_sel, a_sel)
-            println(size(heights), size(d["above_isco"] ./ d["missed"]))
             plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[n], c=colors[a])
             if a == 1
                 plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
@@ -201,30 +226,69 @@ end
 # --------------------------- #
 
 begin
-    colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    linestyles = [:solid, :dash, :dot]
-    plot()
-    for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
+    colors = [:red, :blue, :green, :purple, :orange,  :cyan]
+    linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
+    p = plot()
+    plot!([], [], ls=linestyles[1], c=:black, label="With ISCO")
+    plot!([], [], ls=linestyles[2], c=:black, label="Without ISCO")
+    c_count = 1
+    for (a, a_sel) in enumerate([0.0, 0.998])
         m = KerrMetric(1.0, a_sel)
-        for (n, m_sel) in enumerate([0.1, 0.5, 1.0])
+        for (n, m_sel) in enumerate([0.1, 1.0])
             heights = create_heights(m, h_out, N_h)
             fname = "$file_pref_load-ref-frac-$a_sel-$m_sel-SS"
             d = loaddata(load_dir, fname)
-            plot!(heights, (d["above_isco"] .+ d["below_isco"]) ./ d["missed"], ls=linestyles[n], c=colors[a],label="", markershape=:circle, ms=1)
-            # plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=:dot, c=colors[n],)
+            plot!(heights, (d["above_isco"] .+ d["below_isco"]) ./ d["missed"], c=colors[c_count], ls = linestyles[1], label="", markershape=:circle, ms=1)
+            plot!(heights, d["above_isco"] ./ d["missed"], label="", c=colors[c_count], ls =linestyles[2], markershape=:circle, ms=1)
+            plot!([], [], ls=:solid, c=colors[c_count], label="a = $a_sel, \$\\dot{m}\$ = $m_sel")
+            c_count += 1
             if a == 1
-                plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
+                # plot!([], [], ls=linestyles[n], c=:black, label="\$\\dot{m}\$ = $m_sel")
+            end
+        end
+    end
+xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
+yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
+title!("Reflection Fractions including ISCO photons")
+savefig("$save_dir/R-vs-h-SS-WithISCO.pdf")
+display(p)
+end
+
+# -------------------- #
+# Funnel Like Geometry #
+# -------------------- #
+
+begin
+    colors = [:red, :blue, :green, :cyan, :purple, :orange]
+    linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
+    plot()
+    for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
+        m = KerrMetric(1.0, a_sel)
+        for (n, alpha) in enumerate(α_vals)
+            heights = create_heights(m, h_out, N_h)
+            fname = "$file_pref-ref-frac-$a_sel-$alpha-funnel"
+            d = loaddata(load_dir, fname)
+            plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[n], c=colors[a])
+            if a == 1
+                plot!([], [], ls=linestyles[n], c=:black, label="α = $alpha")
             end
         end
         plot!([], [], ls=:solid, c=colors[a], label="a = $a_sel")
     end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
-title!("Reflection Fractions including ISCO photons")
-savefig("$save_dir/R-vs-h-SS-WithISCO.pdf")
+title!("Reflection Fractions for varying α")
+# savefig("$save_dir/R-vs-h_SS.pdf")
 end
 
-# -------------------------- #
+
+# ------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------ #
 
 # R vs m_edd for fixed spin
 
