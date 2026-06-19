@@ -1,5 +1,6 @@
 using Gradus, Plots
-include("StandardFuncs.jl")
+include(joinpath(@__DIR__, "StandardFuncs.jl"))
+include(joinpath(@__DIR__, "FunnelGeom.jl"))
 
 const _ROOT = joinpath(@__DIR__, "..")
 
@@ -7,8 +8,6 @@ const _ROOT = joinpath(@__DIR__, "..")
 # Settings #
 # -------- #
 
-# save_dir = "$(pwd())/data/results/pub/stash" # Set where to write data to
-# load_dir = "$(pwd())/data/results/pub/stash" # Set where to load data from
 save_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to write data to
 load_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to load data fro
 file_pref = "run_2" # Add a prefix to the filename being saved/loaded
@@ -64,8 +63,11 @@ for a in a_vals
             println("Data already present, skipping S&S disk")
         end
     end
+    
     for alpha in α_vals
+        @info "α = $alpha"
         fname = "$file_pref-ref-frac-$a-$alpha-funnel"
+        
         if !isfile("$save_dir/$fname") || overwrite
             d = funnel_disk(alpha, m;) ∘ ThinDisc(0.0, Inf)
             heights, geods = calc_geods(m, d; N, h_out, N_h)
