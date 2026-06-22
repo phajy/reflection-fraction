@@ -3,24 +3,31 @@ include("StandardFuncs.jl")
 using ColorSchemes
 using Interpolations
 
+# todo set it up such that running the entire thing will produce and save all the required figures
+# todo color palette
+
 # -------- #
 # Settings #
 # -------- #
 
-default(palette = palette(:Dark2_8))
+a = default(palette = palette(:Dark2_8))
+# colors = [:red, :blue, :green, :cyan, :purple, :orange]
+colors = palette(:Dark2_8)
+linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
 
 # todo change below to more robust directory trackers
-save_dir = "$(pwd())/data/results/pub/figures" # Set where to save figures
-load_dir = "$(pwd())/data/results/pub/stash" # Set where to load data from
+const _ROOT = joinpath(@__DIR__, "..")
+save_dir = joinpath(_ROOT, "data", "results", "pub", "figures") # Set where to write data to
+load_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to load data from
 # file_pref = "run_2" # Add a prefix to the filename being saved/loaded
 file_pref_load = "run_2"
-# overwrite = false
+overwrite = true
 
 # Initialize grid #
 
 # Spin values for which results are calculated / loaded from
 # a_vals = [0.0, 0.3, 0.5, 0.7, 0.900, 0.990, 0.998]
-a_vals = [0.0, 0.15, 0.3, 0.5, 0.7, 0.8, 0.900, 0.95, 0.990, 0.998]
+# a_vals = [0.0, 0.15, 0.3, 0.5, 0.7, 0.8, 0.900, 0.95, 0.990, 0.998]
 a_vals = [0.0, 0.1, 0.15, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.900, 0.95, 0.990, 0.998]
 
 # Eddington ratios for which results are calculated / loaded from
@@ -33,12 +40,12 @@ h_out = 100 # Maximum height of corona
 N_h = 40 # Number of coronal heights considered
 N = 10000 # Number of photons that are traced
 
-α_vals = [0.1, 0.2, 0.3, 0.4]
-
 # Coronal heights
 # h_out = 100 # Maximum height of corona
 # N_h = 100 # Number of coronal heights considered
 # N = 10000 # Number of photons that are traced
+
+α_vals = [0.1, 0.2, 0.3, 0.4]
 
 # ----------------------------------- #
 # Check that all required files exist #
@@ -70,8 +77,10 @@ end
 # Max R as a function of m_edd
 # ---------------------------- #
 
+
+
 begin
-    plot(xlabel="m_edd", ylabel="R", title="Maximum R as a function of m_edd", legend=:bottomright, legendfontsize=7)
+    p = plot(xlabel="m_edd", ylabel="R", title="Maximum R as a function of m_edd", legend=:bottomright, legendfontsize=7)
     for a_sel in a_vals
         m = KerrMetric(1.0, a_sel)
         heights = create_heights(m, h_out, N_h)
@@ -91,7 +100,8 @@ begin
         plot!(m_edd_full, R_max, label="a = $a_sel", ls=:dash, markershape=:circle, ms=2.5)    
     end
     yaxis!(ylims=(1,50), :log10, yticks=([1, 2, 5, 10, 20,  50], [1, 2, 5, 10, 20,  50]))
-    # savefig("$save_dir/R_vs_medd.pdf")
+    !isfile(joinpath(save_dir, "R_vs_medd.pdf")) || overwrite ? savefig(joinpath(save_dir, "R_vs_medd.pdf")) : println("Figure already present, not saving")
+    display(p)
 end
 
 # ------------------------------ #
@@ -113,7 +123,7 @@ end
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20], [1, 2, 5, 10, 20]))
 title!("Reflection Fractions")
-# savefig("$save_dir/R_ThinDisk.pdf")
+!isfile(joinpath(save_dir, "R_ThinDisk.pdf")) || overwrite ? savefig(joinpath(save_dir, "R_ThinDisk.pdf")) : println("Figure already present, not saving")
 display(pl)
 end
 
@@ -122,7 +132,7 @@ end
 # -------------------------- #
 
 begin
-    colors = [:red, :blue, :green, :cyan, :purple, :orange]
+    
     Ignore_below_ISCO = false
 
     max_R = zeros(size(a_vals)) # Stores max R for given spin
@@ -174,7 +184,7 @@ begin
     xaxis!("Spin")
     yaxis!("Source Height (r_g)", ylims=(1,12), :log10)
     title!("Source height at Maximum R")
-    # savefig("$save_dir/Rmax_height.pdf")
+    !isfile(joinpath(save_dir, "Rmax_height.pdf")) || overwrite ? savefig(joinpath(save_dir, "Rmax_height.pdf")) : println("Figure already present, not saving")
 end
 
 
@@ -183,24 +193,16 @@ function hmax(a)
     (1.89 * a^2 - 10.86*a + 10.07) * (1 + (9.41e-4 / log10(a)))
 end
 
-m = KerrMetric(1.0, 0.5)
-heights = create_heights(m, h_out, N_h)
-heights
-ones(size(heights)) .* .5
-scatter!(ones(size(heights)) .* .5, heights, ms=2, c = :black, markershape=:circle)
+# Overplot fit from dauser+2014 #
+# a_vals_fine = LinRange(0,1, 100)
+# hmax_pred = hmax.(a_vals_fine)
+# plot!(a_vals_fine, hmax_pred)
 
-# Overplot fit from dauser+2014
-
-a_vals_fine = LinRange(0,1, 100)
-hmax_pred = hmax.(a_vals_fine)
-plot!(a_vals_fine, hmax_pred)
 # -------------------------- #
 # R for different m_edd
 # -------------------------- #
 
 begin
-    colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
     plot()
     for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
         m = KerrMetric(1.0, a_sel)
@@ -215,10 +217,10 @@ begin
         end
         plot!([], [], ls=:solid, c=colors[a], label="a = $a_sel")
     end
-xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
-yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
-title!("Reflection Fractions for varying \$\\dot{m}\$")
-# savefig("$save_dir/R-vs-h_SS.pdf")
+    xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
+    yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
+    title!("Reflection Fractions for varying \$\\dot{m}\$")
+    !isfile(joinpath(save_dir, "R-vs-h_SS.pdf")) || overwrite ? savefig(joinpath(save_dir, "R-vs-h_SS.pdf")) : println("Figure already present, not saving")
 end
 
 # --------------------------- #
@@ -226,8 +228,6 @@ end
 # --------------------------- #
 
 begin
-    colors = [:red, :blue, :green, :purple, :orange,  :cyan]
-    linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
     p = plot()
     plot!([], [], ls=linestyles[1], c=:black, label="With ISCO")
     plot!([], [], ls=linestyles[2], c=:black, label="Without ISCO")
@@ -247,11 +247,11 @@ begin
             end
         end
     end
-xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
-yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
-title!("Reflection Fractions including ISCO photons")
-savefig("$save_dir/R-vs-h-SS-WithISCO.pdf")
-display(p)
+    xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
+    yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
+    title!("Reflection Fractions including ISCO photons")
+    !isfile(joinpath(save_dir, "R-vs-h-SS-WithISCO.pdf")) || overwrite ? savefig(joinpath(save_dir, "R-vs-h-SS-WithISCO.pdf")) : println("Figure already present, not saving")
+    display(p)
 end
 
 # -------------------- #
@@ -259,8 +259,6 @@ end
 # -------------------- #
 
 begin
-    colors = [:red, :blue, :green, :cyan, :purple, :orange]
-    linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
     plot()
     for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
         m = KerrMetric(1.0, a_sel)
@@ -278,7 +276,7 @@ begin
 xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
 yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 25, 50], [1, 2, 5, 10, 25, 50]))
 title!("Reflection Fractions for varying α")
-# savefig("$save_dir/R-vs-h_SS.pdf")
+savefig("$save_dir/R-vs-h-funnel.pdf")
 end
 
 
@@ -289,73 +287,3 @@ end
 # ------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------ #
-
-# R vs m_edd for fixed spin
-
-begin
-pl = plot(grid=true, minorgrid=true)
-
-colors = [:blue, :black, :maroon, :green, :pink, :purple, :teal, :orange, :red, :silver]
-# Set which accretion rate is being plotted
-a_sel = 0.998
-
-# plot!([], [], label="Thin Disk", ls=:dash, c=:black)
-# plot!([], [], label="M_edd = $m_edd_sel", ls=:solid, c=:black)
-
-
-for (n, m_edd) in enumerate(m_edd_vals)
-    
-    m = KerrMetric(1.0, a_sel)
-    heights = create_heights(m, h_out, N_h)
-
-    d_custom = loaddata(load_dir, "$file_pref_load-ref-frac-$a_sel-$m_edd-SS")
-
-    plot!(heights, d_custom["above_isco"] ./ d_custom["missed"], label="m_edd = $m_edd", ls=:solid, c=colors[n])     
-
-    if n == 1
-        d_thin = loaddata(load_dir, "$file_pref_load-ref-frac-$a_sel-0.0-thin")
-        plot!(heights, d_thin["above_isco"] ./ d_thin["missed"], label="m_edd = 0.0", ls=:solid, c=colors[end]) 
-    end
-    # break
-end
-
-xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
-yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20, 25, 50], [1, 2, 5, 10, 20, 25, 50]))
-title!("Reflection Fractions, \$ a = $a_sel\$")
-# savefig("data/results/custom_shakura_sunyaev/Preliminary/R_comparison_medd$m_edd_sel.pdf")
-display(pl)
-end
-
-# Comparisons to thin disk
-
-begin
-pl = plot(grid=true, minorgrid=true)
-
-colors = [:blue, :black, :maroon, :green, :pink, :purple, :teal, :orange, :red, :silver]
-# Set which accretion rate is being plotted
-m_edd_sel = 1.0
-
-plot!([], [], label="Thin Disk", ls=:dash, c=:black)
-plot!([], [], label="M_edd = $m_edd_sel", ls=:solid, c=:black)
-
-for (n, a) in enumerate(a_vals)
-    
-    m = KerrMetric(1.0, a)
-    heights = create_heights(m, h_out, N_h)
-
-    d_custom = loaddata(load_dir, "$file_pref_load-ref-frac-$a-$m_edd_sel-SS")
-
-    plot!(heights, d_custom["above_isco"] ./ d_custom["missed"], label="a = $a", ls=:solid, c=colors[n]) 
-
-    d_thin = loaddata(load_dir, "$file_pref_load-ref-frac-$a-0.0-thin")
-
-    plot!(heights, d_thin["above_isco"] ./ d_thin["missed"], label="", ls=:dash, c=colors[n]) 
-    # break
-end
-
-xaxis!("Source Height (r_g)", :log10, xticks=([2, 10, 30, 100], [2, 10, 30, 100]))
-yaxis!("R", :log10, minorgrid=true, yticks=([1, 2, 5, 10, 20, 25], [1, 2, 5, 10, 20, 25]))
-title!("Reflection Fractions, \$\\dot{m} = $m_edd_sel\$")
-# savefig("data/results/custom_shakura_sunyaev/Preliminary/R_comparison_medd$m_edd_sel.pdf")
-display(pl)
-end

@@ -9,7 +9,7 @@ const _ROOT = joinpath(@__DIR__, "..")
 # -------- #
 
 save_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to write data to
-load_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to load data fro
+load_dir = joinpath(_ROOT, "data", "results", "pub", "stash") # Set where to load data from
 file_pref = "run_2" # Add a prefix to the filename being saved/loaded
 overwrite = false
 
