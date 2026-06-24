@@ -10,8 +10,6 @@ using Interpolations
 # Settings #
 # -------- #
 
-a = default(palette = palette(:Dark2_8))
-# colors = [:red, :blue, :green, :cyan, :purple, :orange]
 colors = palette(:Dark2_8)
 linestyles = [:solid, :dash, :dashdot, :dashdotdot, :dot]
 
@@ -45,7 +43,8 @@ N = 10000 # Number of photons that are traced
 # N_h = 100 # Number of coronal heights considered
 # N = 10000 # Number of photons that are traced
 
-α_vals = [0.1, 0.2, 0.3, 0.4]
+# α_vals = [0.1, 0.2, 0.3, 0.4]
+α_vals = [0.1, 0.2, 0.3, 0.4, 1.0, 2.0]
 
 # ----------------------------------- #
 # Check that all required files exist #
@@ -262,9 +261,9 @@ begin
     plot()
     for (a, a_sel) in enumerate([0.0, 0.5, 0.998])
         m = KerrMetric(1.0, a_sel)
-        for (n, alpha) in enumerate(α_vals)
+        for (n, alpha) in enumerate([0.1, 0.4, 1.0, 2.0])
             heights = create_heights(m, h_out, N_h)
-            fname = "$file_pref-ref-frac-$a_sel-$alpha-funnel"
+            fname = "$file_pref_load-ref-frac-$a_sel-$alpha-funnel"
             d = loaddata(load_dir, fname)
             plot!(heights, d["above_isco"] ./ d["missed"], label="", ls=linestyles[n], c=colors[a])
             if a == 1

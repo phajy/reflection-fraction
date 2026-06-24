@@ -68,13 +68,13 @@ for a in a_vals
         @info "α = $alpha"
         fname = "$file_pref-ref-frac-$a-$alpha-funnel"
         
-        if 1 == 1
+        if !isfile("$save_dir/$fname") || overwrite
             d = funnel_disk(alpha, m;) ∘ ThinDisc(0.0, Inf)
             heights, geods = calc_geods(m, d; N, h_out, N_h)
             cf = count_fractions(geods, Gradus.isco(m))
             stashdata(save_dir, fname; cf...)
         else
-            println("Data already present, skipping S&S disk")
+            println("Data already present, skipping funnel-like disk")
         end
     end
 end
